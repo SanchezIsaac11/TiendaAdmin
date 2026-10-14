@@ -11,7 +11,6 @@ Identify the system actors, their interactions with the application, and the mai
 ## Main Actors
 
 - **Administrator:** Manages system configuration, products, permissions, and reports.
-- **Supervisor:** Authorizes restricted operations and supervises cash register activities.
 - **Cashier:** Processes sales, manages assigned cash register shifts, and handles payments.
 
 ## Main Use Cases
