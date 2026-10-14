@@ -1,0 +1,35 @@
+# Use Cases — TiendaAdmin POS
+
+## Description
+
+This directory contains the use case documentation for the TiendaAdmin Point of Sale (POS) system.
+
+## Objective
+
+Identify the system actors, their interactions with the application, and the main business processes supported by the POS.
+
+## Main Actors
+
+- **Administrator:** Manages system configuration, products, permissions, and reports.
+- **Supervisor:** Authorizes restricted operations and supervises cash register activities.
+- **Cashier:** Processes sales, manages assigned cash register shifts, and handles payments.
+
+## Main Use Cases
+
+- User authentication.
+- Open and close cash register shifts.
+- Register sales and process payments.
+- Search products using barcodes.
+- Manage inventory and stock adjustments.
+- Apply promotions and discounts.
+- Register cash inflows and outflows.
+- Generate and reprint sales receipts.
+- Consult sales history.
+- Generate sales and profit reports.
+- Synchronize inventory between two cash registers.
+
+## Documentation
+
+The detailed use case descriptions and diagrams will be added during the Sprint 1 documentation process.
+
+**Status:** Initial structure created.
