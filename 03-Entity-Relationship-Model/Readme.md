@@ -25,7 +25,6 @@ The following entities will be considered during database design:
 - **Products:** Product catalog, prices, costs, and stock levels.
 - **Inventory Movements:** Stock changes, adjustments, and losses.
 - **Sales:** Sales transactions and associated cash registers.
-- **Sale Details:** Products and quantities included in each sale.
 - **Payments:** Payment methods and amounts.
 - **Promotions:** Discounts and promotional rules.
 - **Suppliers:** Supplier information and related transactions.
