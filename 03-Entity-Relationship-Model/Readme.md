@@ -20,11 +20,8 @@ The following entities will be considered during database design:
 
 - **Users:** System users and their assigned roles.
 - **Roles:** Access levels and permissions.
-- **Cash Registers:** Information about each POS terminal.
-- **Cash Shifts:** Opening and closing records for each register.
-- **Products:** Product catalog, prices, costs, and stock levels.
-- **Inventory Movements:** Stock changes, adjustments, and losses.
-- **Sales:** Sales transactions and associated cash registers.
+- **Cash Registers:** POS terminals and their opening and closing records.
+- **Products and Sales:** Product catalog with prices and stock, inventory changes, and sales transactions.
 - **Payments:** Payment methods and amounts.
 - **Promotions:** Discounts and promotional rules.
 - **Suppliers:** Supplier information and related transactions.
