@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Productos</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    if (typeof supabase === 'undefined') {
+      document.write('<script src="../www/js/lib/supabase.js"><\/script>');
+    }
+  </script>
+</head>
+<body>
+
+  <div class="container">
+    <div class="grid-layout">
+      <!-- Formulario -->
+      <section class="card">
+        <h3>Nuevo Producto</h3>
+        <form id="productForm">
+          <div class="form-group">
+            <label for="barcode">Código de Barras</label>
+            <input type="text" id="barcode" name="barcode" placeholder="Ej: 750103912089">
+          </div>
+
+          <div class="form-group">
+            <label for="name">Nombre</label>
+            <input type="text" id="name" name="name" placeholder="Ej: Leche Lala Entera 1L">
+          </div>
+
+          <div class="form-group">
+            <label for="category">Categoría</label>
+            <select id="category" name="category">
+              <option value="Abarrotes y Granos">Abarrotes y Granos</option>
+              <option value="Lácteos y Cremería">Lácteos y Cremería</option>
+              <option value="Bebidas y Refrescos">Bebidas y Refrescos</option>
+              <option value="Panadería">Panadería</option>
+              <option value="Botanas">Botanas</option>
+              <option value="Limpieza e Higiene">Limpieza e Higiene</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="price">Precio ($)</label>
+              <input type="number" id="price" name="price" placeholder="29.50">
+            </div>
+
+            <div class="form-group">
+              <label for="cost">Costo ($)</label>
+              <input type="number" id="cost" name="cost" placeholder="22.00">
+            </div>
+
+            <div class="form-group">
+              <label for="stock">Stock</label>
+              <input type="number" id="stock" name="stock" placeholder="30">
+            </div>
+          </div>
+
+          <button type="submit" id="btnSubmit" class="btn btn-primary">
+            Guardar Producto
+          </button>
+
+          <div id="feedbackMessage" class="feedback-message" style="display: none;"></div>
+        </form>
+      </section>
+
+      <!-- Tabla de Productos -->
+      <section class="card">
+        <div class="table-header-row">
+          <h3>Lista de Productos</h3>
+          <button type="button" id="btnRefresh" class="btn btn-secondary btn-sm">
+            Actualizar
+          </button>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="products-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Precio</th>
+                <th>Stock</th>
+              </tr>
+            </thead>
+            <tbody id="productsTableBody">
+              <tr>
+                <td colspan="5" class="loading-cell">Cargando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-footer">
+          <span id="productsCount">Total: 0</span>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

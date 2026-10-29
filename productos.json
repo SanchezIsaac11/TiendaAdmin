@@ -1,0 +1,26 @@
+[
+  {
+    "barcode": "7501820511234",
+    "name": "Leche Lala Entera 1L",
+    "category": "Lácteos y Cremería",
+    "price": 29.5,
+    "cost": 22.5,
+    "stock": 34
+  },
+  {
+    "barcode": "750185538472",
+    "name": "Coca-Cola Original 600ml",
+    "category": "Bebidas y Refrescos",
+    "price": 19,
+    "cost": 14,
+    "stock": 42
+  },
+  {
+    "barcode": "750103912089",
+    "name": "Aceite Nutrioli 850ml",
+    "category": "Abarrotes y Granos",
+    "price": 45,
+    "cost": 36,
+    "stock": 15
+  }
+]
