@@ -6,17 +6,17 @@ const path = require('path');
 const PORT = 3000;
 const DB_FILE = path.join(__dirname, 'productos.json');
 
-// Inicializar archivo de persistencia si no existe
+// Init products.json
 if (!fs.existsSync(DB_FILE)) {
-  const datosIniciales = [
+  const seedData = [
     { barcode: '7501820511234', name: 'Leche Lala Entera 1L', category: 'Lácteos y Cremería', price: 29.50, cost: 22.50, stock: 34 },
     { barcode: '750185538472', name: 'Coca-Cola Original 600ml', category: 'Bebidas y Refrescos', price: 19.00, cost: 14.00, stock: 42 },
     { barcode: '750103912089', name: 'Aceite Nutrioli 850ml', category: 'Abarrotes y Granos', price: 45.00, cost: 36.00, stock: 15 }
   ];
-  fs.writeFileSync(DB_FILE, JSON.stringify(datosIniciales, null, 2), 'utf-8');
+  fs.writeFileSync(DB_FILE, JSON.stringify(seedData, null, 2), 'utf-8');
 }
 
-function leerProductos() {
+function getProducts() {
   try {
     const data = fs.readFileSync(DB_FILE, 'utf-8');
     return JSON.parse(data);
@@ -25,13 +25,13 @@ function leerProductos() {
   }
 }
 
-function guardarProductos(productos) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(productos, null, 2), 'utf-8');
+function saveProducts(products) {
+  fs.writeFileSync(DB_FILE, JSON.stringify(products, null, 2), 'utf-8');
 }
 
-// Crear servidor HTTP
+// Create http server
 const server = http.createServer((req, res) => {
-  // Configuración de cabeceras CORS
+  // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -42,35 +42,35 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // 1. ENDPOINT GET /api/productos: Obtener productos
+  // 1. Get Products
   if (req.method === 'GET' && req.url === '/api/productos') {
-    const productos = leerProductos();
+    const product = getProducts();
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(productos));
+    res.end(JSON.stringify(product));
     return;
   }
 
-  // 2. ENDPOINT POST /api/productos: Guardar producto nuevo
+  // 2. Save Products
   if (req.method === 'POST' && req.url === '/api/productos') {
     let body = '';
     req.on('data', chunk => { body += chunk; });
     req.on('end', () => {
       try {
-        const nuevo = JSON.parse(body);
+        const newProduct = JSON.parse(body);
 
-        const productos = leerProductos();
-        const existeIndex = productos.findIndex(p => p.barcode === nuevo.barcode);
+        const product = getProducts();
+        const existeIndex = product.findIndex(p => p.barcode === newProduct.barcode);
         if (existeIndex >= 0) {
-          productos[existeIndex] = nuevo;
+          product[existeIndex] = newProduct;
         } else {
-          productos.unshift(nuevo);
+          product.unshift(newProduct);
         }
 
-        guardarProductos(productos);
+        saveProducts(product);
 
-        console.log(`[BACKEND] Producto guardado: ${nuevo.name} ($${nuevo.price})`);
+        console.log(`[BACKEND] Producto guardado: ${newProduct.name} ($${newProduct.price})`);
         res.writeHead(201, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true, producto: nuevo }));
+        res.end(JSON.stringify({ ok: true, producto: newProduct }));
       } catch (err) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'JSON inválido' }));
@@ -79,7 +79,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // 3. SERVIR ARCHIVOS ESTÁTICOS (HTML, CSS, JS)
+  // 3. Serve Static Files
   let filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url);
   const ext = path.extname(filePath);
 

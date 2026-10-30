@@ -1,4 +1,4 @@
-// Configuración de Supabase
+// Supebase Config
 const DB_CONFIG = {
   url: 'https://qluxojdodesadfthugml.supabase.co',
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsdXhvamRvZGVzYWRmdGh1Z21sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxODM5NTUsImV4cCI6MjEwNzc1OTk1NX0.t5etK56r6Z2qsHPtjni7wnN1AmUSDEfQXG_4Roum2u0'
@@ -10,11 +10,51 @@ const btnRefresh = document.getElementById('btnRefresh');
 const tableBody = document.getElementById('productsTableBody');
 const countElement = document.getElementById('productsCount');
 const feedback = document.getElementById('feedbackMessage');
+const priceCostAlert = document.getElementById('priceCostAlert');
+const priceInput = document.getElementById('price');
+const costInput = document.getElementById('cost');
+const stockInput = document.getElementById('stock');
 
 let supabaseClient = null;
 let connectionMode = 'local';
 
-async function inicializarConexion() {
+function validatePriceCost() {
+  const priceVal = priceInput.value.trim();
+  const costVal = costInput.value.trim();
+
+  if (priceVal === '' || costVal === '') {
+    priceCostAlert.style.display = 'none';
+    priceCostAlert.textContent = '';
+    btnSubmit.disabled = false;
+    return;
+  }
+
+  const price = parseFloat(priceVal);
+  const cost = parseFloat(costVal);
+
+  if (isNaN(price) || isNaN(cost)) {
+    priceCostAlert.style.display = 'none';
+    priceCostAlert.textContent = '';
+    btnSubmit.disabled = false;
+    return;
+  }
+
+  if (price < cost) {
+    priceCostAlert.textContent = 'El costo es mayor al precio.';
+    priceCostAlert.style.display = 'block';
+    btnSubmit.disabled = true;
+  } else if (price === cost) {
+    priceCostAlert.textContent = 'El precio es igual al costo.';
+    priceCostAlert.style.display = 'block';
+    btnSubmit.disabled = false;
+  } else {
+    priceCostAlert.style.display = 'none';
+    priceCostAlert.textContent = '';
+    btnSubmit.disabled = false;
+  }
+}
+
+async function initConnection() {
   if (window.location.protocol.startsWith('http')) {
     try {
       const resp = await fetch('/api/productos');
@@ -36,33 +76,33 @@ async function inicializarConexion() {
   connectionMode = 'local';
 }
 
-function mostrarMensaje(texto, tipo = 'info') {
+function showMessage(text, type = 'info') {
   feedback.style.display = 'block';
-  feedback.className = `feedback-message feedback-${tipo}`;
-  feedback.textContent = texto;
+  feedback.className = `feedback-message feedback-${type}`;
+  feedback.textContent = text;
 
   setTimeout(() => {
     feedback.style.display = 'none';
   }, 3000);
 }
 
-async function cargarProductos() {
+async function loadProducts() {
   tableBody.innerHTML = `
     <tr>
       <td colspan="5" class="loading-cell">Cargando...</td>
     </tr>
   `;
 
-  let productos = [];
+  let products = [];
 
   if (connectionMode === 'backend_node') {
     try {
       const res = await fetch('/api/productos');
       if (res.ok) {
-        productos = await res.json();
+        products = await res.json();
       }
     } catch (e) {
-      productos = obtenerProductosLocales();
+      products = getLocalProducts();
     }
   } else if (connectionMode === 'supabase' && supabaseClient) {
     try {
@@ -72,87 +112,146 @@ async function cargarProductos() {
         .order('id', { ascending: false });
 
       if (!error && Array.isArray(data) && data.length > 0) {
-        productos = data;
-        localStorage.setItem('script2_productos', JSON.stringify(productos));
+        products = data;
+        localStorage.setItem('script2_productos', JSON.stringify(products));
       } else {
-        productos = obtenerProductosLocales();
+        products = getLocalProducts();
       }
     } catch (err) {
-      productos = obtenerProductosLocales();
+      products = getLocalProducts();
     }
   } else {
-    productos = obtenerProductosLocales();
+    products = getLocalProducts();
   }
 
-  renderizarTabla(productos);
+  renderTable(products);
 }
 
-async function guardarProducto(evento) {
-  evento.preventDefault();
+async function saveProduct(event) {
+  event.preventDefault();
+
+  const barcode = document.getElementById('barcode').value.trim();
+  const name = document.getElementById('name').value.trim();
+  const category = document.getElementById('category').value;
+  const priceVal = priceInput.value.trim();
+  const costVal = costInput.value.trim();
+  const stockVal = stockInput.value.trim();
+
+  if (!barcode || !name) {
+    showMessage('Por favor completa todos los campos requeridos', 'error');
+    return;
+  }
+
+  const price = parseFloat(priceVal);
+  const cost = parseFloat(costVal);
+  const stock = parseInt(stockVal, 10);
+
+  // Validation: stock cannot be zero or a negative number
+  if (stockVal === '' || isNaN(stock) || stock <= 0) {
+    showMessage('El stock no puede ser de cero ni un número negativo', 'error');
+    stockInput.focus();
+    return;
+  }
+
+  // Validation: cost cannot be zero or a negative number
+  if (costVal === '' || isNaN(cost) || cost <= 0) {
+    showMessage('El costo no puede ser de cero ni un número negativo', 'error');
+    costInput.focus();
+    return;
+  }
+
+  // Validation: price cannot be zero or a negative number
+  if (priceVal === '' || isNaN(price) || price <= 0) {
+    showMessage('El precio no puede ser de cero ni un número negativo', 'error');
+    priceInput.focus();
+    return;
+  }
+
+  // Validation: price is less than cost
+  if (price < cost) {
+    priceCostAlert.textContent = 'El costo es mayor al precio.';
+    priceCostAlert.style.display = 'block';
+    btnSubmit.disabled = true;
+    showMessage('El costo es mayor al precio.', 'error');
+    return;
+  }
+
+  // Validation: price and cost are the same
+  if (price === cost) {
+    priceCostAlert.textContent = 'El precio es igual al costo.';
+    priceCostAlert.style.display = 'block';
+    const confirmar = window.confirm('El costo y el precio son el mismo, Desea Guardar de todos modos');
+    if (!confirmar) {
+      return;
+    }
+  }
 
   btnSubmit.disabled = true;
   btnSubmit.textContent = 'Guardando...';
 
-  const nuevoProducto = {
-    barcode: document.getElementById('barcode').value.trim(),
-    name: document.getElementById('name').value.trim(),
-    category: document.getElementById('category').value,
-    price: parseFloat(document.getElementById('price').value) || 0,
-    cost: parseFloat(document.getElementById('cost').value) || 0,
-    stock: parseInt(document.getElementById('stock').value, 10) || 0
+  const newProduct = {
+    barcode,
+    name,
+    category,
+    price,
+    cost,
+    stock
   };
 
-  let guardadoOk = false;
+  let isSaved = false;
 
   if (connectionMode === 'backend_node') {
     try {
       const resp = await fetch('/api/productos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nuevoProducto)
+        body: JSON.stringify(newProduct)
       });
       if (resp.ok) {
-        guardadoOk = true;
+        isSaved = true;
       }
     } catch (e) {}
   }
 
-  if (!guardadoOk && connectionMode === 'supabase' && supabaseClient) {
+  if (!isSaved && connectionMode === 'supabase' && supabaseClient) {
     try {
       const { data, error } = await supabaseClient
         .from('products')
-        .insert([nuevoProducto])
+        .insert([newProduct])
         .select();
 
       if (!error) {
-        guardadoOk = true;
+        isSaved = true;
       }
     } catch (err) {}
   }
 
-  if (!guardadoOk) {
-    guardarEnLocal(nuevoProducto);
-    guardadoOk = true;
+  if (!isSaved) {
+    saveLocal(newProduct);
+    isSaved = true;
   }
 
-  if (guardadoOk) {
-    mostrarMensaje('Producto guardado', 'success');
+  if (isSaved) {
+    showMessage('Producto guardado', 'success');
     form.reset();
+    priceCostAlert.style.display = 'none';
+    priceCostAlert.textContent = '';
+    btnSubmit.disabled = false;
     document.getElementById('barcode').focus();
-    await cargarProductos();
+    await loadProducts();
   } else {
-    mostrarMensaje('Error al guardar producto', 'error');
+    showMessage('Error al guardar producto', 'error');
   }
 
   btnSubmit.disabled = false;
   btnSubmit.textContent = 'Guardar Producto';
 }
 
-function obtenerProductosLocales() {
-  const guardados = localStorage.getItem('script2_productos');
-  if (guardados) {
+function getLocalProducts() {
+  const saved = localStorage.getItem('script2_productos');
+  if (saved) {
     try {
-      return JSON.parse(guardados);
+      return JSON.parse(saved);
     } catch (e) {}
   }
   return [
@@ -162,19 +261,19 @@ function obtenerProductosLocales() {
   ];
 }
 
-function guardarEnLocal(producto) {
-  const lista = obtenerProductosLocales();
-  const existeIndex = lista.findIndex(p => p.barcode === producto.barcode);
+function saveLocal(product) {
+  const list = getLocalProducts();
+  const existeIndex = list.findIndex(p => p.barcode === product.barcode);
   if (existeIndex >= 0) {
-    lista[existeIndex] = producto;
+    list[existeIndex] = product;
   } else {
-    lista.unshift(producto);
+    list.unshift(product);
   }
-  localStorage.setItem('script2_productos', JSON.stringify(lista));
+  localStorage.setItem('script2_productos', JSON.stringify(list));
 }
 
-function renderizarTabla(productos) {
-  if (!productos || productos.length === 0) {
+function renderTable(product) {
+  if (!product || product.length === 0) {
     tableBody.innerHTML = `
       <tr>
         <td colspan="5" class="empty-cell">No hay productos.</td>
@@ -184,7 +283,7 @@ function renderizarTabla(productos) {
     return;
   }
 
-  tableBody.innerHTML = productos.map(prod => `
+  tableBody.innerHTML = product.map(prod => `
     <tr>
       <td><code>${escapeHtml(prod.barcode || '-')}</code></td>
       <td>${escapeHtml(prod.name || '-')}</td>
@@ -194,19 +293,42 @@ function renderizarTabla(productos) {
     </tr>
   `).join('');
 
-  countElement.textContent = `Total: ${productos.length}`;
+  countElement.textContent = `Total: ${product.length}`;
 }
 
-function escapeHtml(texto) {
+function escapeHtml(text) {
   const div = document.createElement('div');
-  div.textContent = texto;
+  div.textContent = text;
   return div.innerHTML;
 }
 
-form.addEventListener('submit', guardarProducto);
-btnRefresh.addEventListener('click', cargarProductos);
+form.addEventListener('submit', saveProduct);
+btnRefresh.addEventListener('click', loadProducts);
+
+if (priceInput && costInput) {
+  priceInput.addEventListener('input', validatePriceCost);
+  costInput.addEventListener('input', validatePriceCost);
+  priceInput.addEventListener('change', validatePriceCost);
+  costInput.addEventListener('change', validatePriceCost);
+}
+
+[priceInput, costInput, stockInput].forEach(input => {
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === '-' || e.key === 'Minus') {
+        e.preventDefault();
+      }
+    });
+  }
+});
+
+form.addEventListener('reset', () => {
+  priceCostAlert.style.display = 'none';
+  priceCostAlert.textContent = '';
+  btnSubmit.disabled = false;
+});
 
 window.addEventListener('DOMContentLoaded', async () => {
-  await inicializarConexion();
-  await cargarProductos();
+  await initConnection();
+  await loadProducts();
 });
