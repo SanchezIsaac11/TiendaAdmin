@@ -1,4 +1,4 @@
-// Configuración de Supabase
+// Supebase Config
 const DB_CONFIG = {
   url: 'https://qluxojdodesadfthugml.supabase.co',
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsdXhvamRvZGVzYWRmdGh1Z21sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxODM5NTUsImV4cCI6MjEwNzc1OTk1NX0.t5etK56r6Z2qsHPtjni7wnN1AmUSDEfQXG_4Roum2u0'
@@ -10,9 +10,49 @@ const btnRefresh = document.getElementById('btnRefresh');
 const tableBody = document.getElementById('productsTableBody');
 const countElement = document.getElementById('productsCount');
 const feedback = document.getElementById('feedbackMessage');
+const priceCostAlert = document.getElementById('priceCostAlert');
+const priceInput = document.getElementById('price');
+const costInput = document.getElementById('cost');
+const stockInput = document.getElementById('stock');
 
 let supabaseClient = null;
 let connectionMode = 'local';
+
+function validatePriceCost() {
+  const priceVal = priceInput.value.trim();
+  const costVal = costInput.value.trim();
+
+  if (priceVal === '' || costVal === '') {
+    priceCostAlert.style.display = 'none';
+    priceCostAlert.textContent = '';
+    btnSubmit.disabled = false;
+    return;
+  }
+
+  const price = parseFloat(priceVal);
+  const cost = parseFloat(costVal);
+
+  if (isNaN(price) || isNaN(cost)) {
+    priceCostAlert.style.display = 'none';
+    priceCostAlert.textContent = '';
+    btnSubmit.disabled = false;
+    return;
+  }
+
+  if (price < cost) {
+    priceCostAlert.textContent = 'El costo es mayor al precio.';
+    priceCostAlert.style.display = 'block';
+    btnSubmit.disabled = true;
+  } else if (price === cost) {
+    priceCostAlert.textContent = 'El precio es igual al costo.';
+    priceCostAlert.style.display = 'block';
+    btnSubmit.disabled = false;
+  } else {
+    priceCostAlert.style.display = 'none';
+    priceCostAlert.textContent = '';
+    btnSubmit.disabled = false;
+  }
+}
 
 async function initConnection() {
   if (window.location.protocol.startsWith('http')) {
@@ -90,16 +130,72 @@ async function loadProducts() {
 async function saveProduct(event) {
   event.preventDefault();
 
+  const barcode = document.getElementById('barcode').value.trim();
+  const name = document.getElementById('name').value.trim();
+  const category = document.getElementById('category').value;
+  const priceVal = priceInput.value.trim();
+  const costVal = costInput.value.trim();
+  const stockVal = stockInput.value.trim();
+
+  if (!barcode || !name) {
+    showMessage('Por favor completa todos los campos requeridos', 'error');
+    return;
+  }
+
+  const price = parseFloat(priceVal);
+  const cost = parseFloat(costVal);
+  const stock = parseInt(stockVal, 10);
+
+  // Validation: stock cannot be zero or a negative number
+  if (stockVal === '' || isNaN(stock) || stock <= 0) {
+    showMessage('El stock no puede ser de cero ni un número negativo', 'error');
+    stockInput.focus();
+    return;
+  }
+
+  // Validation: cost cannot be zero or a negative number
+  if (costVal === '' || isNaN(cost) || cost <= 0) {
+    showMessage('El costo no puede ser de cero ni un número negativo', 'error');
+    costInput.focus();
+    return;
+  }
+
+  // Validation: price cannot be zero or a negative number
+  if (priceVal === '' || isNaN(price) || price <= 0) {
+    showMessage('El precio no puede ser de cero ni un número negativo', 'error');
+    priceInput.focus();
+    return;
+  }
+
+  // Validation: price is less than cost
+  if (price < cost) {
+    priceCostAlert.textContent = 'El costo es mayor al precio.';
+    priceCostAlert.style.display = 'block';
+    btnSubmit.disabled = true;
+    showMessage('El costo es mayor al precio.', 'error');
+    return;
+  }
+
+  // Validation: price and cost are the same
+  if (price === cost) {
+    priceCostAlert.textContent = 'El precio es igual al costo.';
+    priceCostAlert.style.display = 'block';
+    const confirmar = window.confirm('El costo y el precio son el mismo, Desea Guardar de todos modos');
+    if (!confirmar) {
+      return;
+    }
+  }
+
   btnSubmit.disabled = true;
   btnSubmit.textContent = 'Guardando...';
 
   const newProduct = {
-    barcode: document.getElementById('barcode').value.trim(),
-    name: document.getElementById('name').value.trim(),
-    category: document.getElementById('category').value,
-    price: parseFloat(document.getElementById('price').value) || 0,
-    cost: parseFloat(document.getElementById('cost').value) || 0,
-    stock: parseInt(document.getElementById('stock').value, 10) || 0
+    barcode,
+    name,
+    category,
+    price,
+    cost,
+    stock
   };
 
   let isSaved = false;
@@ -138,6 +234,9 @@ async function saveProduct(event) {
   if (isSaved) {
     showMessage('Producto guardado', 'success');
     form.reset();
+    priceCostAlert.style.display = 'none';
+    priceCostAlert.textContent = '';
+    btnSubmit.disabled = false;
     document.getElementById('barcode').focus();
     await loadProducts();
   } else {
@@ -203,8 +302,31 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-form.addEventListener('submit', loadProducts);
+form.addEventListener('submit', saveProduct);
 btnRefresh.addEventListener('click', loadProducts);
+
+if (priceInput && costInput) {
+  priceInput.addEventListener('input', validatePriceCost);
+  costInput.addEventListener('input', validatePriceCost);
+  priceInput.addEventListener('change', validatePriceCost);
+  costInput.addEventListener('change', validatePriceCost);
+}
+
+[priceInput, costInput, stockInput].forEach(input => {
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === '-' || e.key === 'Minus') {
+        e.preventDefault();
+      }
+    });
+  }
+});
+
+form.addEventListener('reset', () => {
+  priceCostAlert.style.display = 'none';
+  priceCostAlert.textContent = '';
+  btnSubmit.disabled = false;
+});
 
 window.addEventListener('DOMContentLoaded', async () => {
   await initConnection();
