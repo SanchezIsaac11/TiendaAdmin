@@ -14,7 +14,7 @@ const feedback = document.getElementById('feedbackMessage');
 let supabaseClient = null;
 let connectionMode = 'local';
 
-async function inicializarConexion() {
+async function initConnection() {
   if (window.location.protocol.startsWith('http')) {
     try {
       const resp = await fetch('/api/productos');
@@ -36,33 +36,33 @@ async function inicializarConexion() {
   connectionMode = 'local';
 }
 
-function mostrarMensaje(texto, tipo = 'info') {
+function showMessage(text, type = 'info') {
   feedback.style.display = 'block';
-  feedback.className = `feedback-message feedback-${tipo}`;
-  feedback.textContent = texto;
+  feedback.className = `feedback-message feedback-${type}`;
+  feedback.textContent = text;
 
   setTimeout(() => {
     feedback.style.display = 'none';
   }, 3000);
 }
 
-async function cargarProductos() {
+async function loadProducts() {
   tableBody.innerHTML = `
     <tr>
       <td colspan="5" class="loading-cell">Cargando...</td>
     </tr>
   `;
 
-  let productos = [];
+  let products = [];
 
   if (connectionMode === 'backend_node') {
     try {
       const res = await fetch('/api/productos');
       if (res.ok) {
-        productos = await res.json();
+        products = await res.json();
       }
     } catch (e) {
-      productos = obtenerProductosLocales();
+      products = getLocalProducts();
     }
   } else if (connectionMode === 'supabase' && supabaseClient) {
     try {
@@ -72,28 +72,28 @@ async function cargarProductos() {
         .order('id', { ascending: false });
 
       if (!error && Array.isArray(data) && data.length > 0) {
-        productos = data;
-        localStorage.setItem('script2_productos', JSON.stringify(productos));
+        products = data;
+        localStorage.setItem('script2_productos', JSON.stringify(products));
       } else {
-        productos = obtenerProductosLocales();
+        products = getLocalProducts();
       }
     } catch (err) {
-      productos = obtenerProductosLocales();
+      products = getLocalProducts();
     }
   } else {
-    productos = obtenerProductosLocales();
+    products = getLocalProducts();
   }
 
-  renderizarTabla(productos);
+  renderTable(products);
 }
 
-async function guardarProducto(evento) {
-  evento.preventDefault();
+async function saveProduct(event) {
+  event.preventDefault();
 
   btnSubmit.disabled = true;
   btnSubmit.textContent = 'Guardando...';
 
-  const nuevoProducto = {
+  const newProduct = {
     barcode: document.getElementById('barcode').value.trim(),
     name: document.getElementById('name').value.trim(),
     category: document.getElementById('category').value,
@@ -102,57 +102,57 @@ async function guardarProducto(evento) {
     stock: parseInt(document.getElementById('stock').value, 10) || 0
   };
 
-  let guardadoOk = false;
+  let isSaved = false;
 
   if (connectionMode === 'backend_node') {
     try {
       const resp = await fetch('/api/productos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nuevoProducto)
+        body: JSON.stringify(newProduct)
       });
       if (resp.ok) {
-        guardadoOk = true;
+        isSaved = true;
       }
     } catch (e) {}
   }
 
-  if (!guardadoOk && connectionMode === 'supabase' && supabaseClient) {
+  if (!isSaved && connectionMode === 'supabase' && supabaseClient) {
     try {
       const { data, error } = await supabaseClient
         .from('products')
-        .insert([nuevoProducto])
+        .insert([newProduct])
         .select();
 
       if (!error) {
-        guardadoOk = true;
+        isSaved = true;
       }
     } catch (err) {}
   }
 
-  if (!guardadoOk) {
-    guardarEnLocal(nuevoProducto);
-    guardadoOk = true;
+  if (!isSaved) {
+    saveLocal(newProduct);
+    isSaved = true;
   }
 
-  if (guardadoOk) {
-    mostrarMensaje('Producto guardado', 'success');
+  if (isSaved) {
+    showMessage('Producto guardado', 'success');
     form.reset();
     document.getElementById('barcode').focus();
-    await cargarProductos();
+    await loadProducts();
   } else {
-    mostrarMensaje('Error al guardar producto', 'error');
+    showMessage('Error al guardar producto', 'error');
   }
 
   btnSubmit.disabled = false;
   btnSubmit.textContent = 'Guardar Producto';
 }
 
-function obtenerProductosLocales() {
-  const guardados = localStorage.getItem('script2_productos');
-  if (guardados) {
+function getLocalProducts() {
+  const saved = localStorage.getItem('script2_productos');
+  if (saved) {
     try {
-      return JSON.parse(guardados);
+      return JSON.parse(saved);
     } catch (e) {}
   }
   return [
@@ -162,19 +162,19 @@ function obtenerProductosLocales() {
   ];
 }
 
-function guardarEnLocal(producto) {
-  const lista = obtenerProductosLocales();
-  const existeIndex = lista.findIndex(p => p.barcode === producto.barcode);
+function saveLocal(product) {
+  const list = getLocalProducts();
+  const existeIndex = list.findIndex(p => p.barcode === product.barcode);
   if (existeIndex >= 0) {
-    lista[existeIndex] = producto;
+    list[existeIndex] = product;
   } else {
-    lista.unshift(producto);
+    list.unshift(product);
   }
-  localStorage.setItem('script2_productos', JSON.stringify(lista));
+  localStorage.setItem('script2_productos', JSON.stringify(list));
 }
 
-function renderizarTabla(productos) {
-  if (!productos || productos.length === 0) {
+function renderTable(product) {
+  if (!product || product.length === 0) {
     tableBody.innerHTML = `
       <tr>
         <td colspan="5" class="empty-cell">No hay productos.</td>
@@ -184,7 +184,7 @@ function renderizarTabla(productos) {
     return;
   }
 
-  tableBody.innerHTML = productos.map(prod => `
+  tableBody.innerHTML = product.map(prod => `
     <tr>
       <td><code>${escapeHtml(prod.barcode || '-')}</code></td>
       <td>${escapeHtml(prod.name || '-')}</td>
@@ -194,19 +194,19 @@ function renderizarTabla(productos) {
     </tr>
   `).join('');
 
-  countElement.textContent = `Total: ${productos.length}`;
+  countElement.textContent = `Total: ${product.length}`;
 }
 
-function escapeHtml(texto) {
+function escapeHtml(text) {
   const div = document.createElement('div');
-  div.textContent = texto;
+  div.textContent = text;
   return div.innerHTML;
 }
 
-form.addEventListener('submit', guardarProducto);
-btnRefresh.addEventListener('click', cargarProductos);
+form.addEventListener('submit', loadProducts);
+btnRefresh.addEventListener('click', loadProducts);
 
 window.addEventListener('DOMContentLoaded', async () => {
-  await inicializarConexion();
-  await cargarProductos();
+  await initConnection();
+  await loadProducts();
 });
