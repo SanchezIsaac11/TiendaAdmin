@@ -9,7 +9,7 @@ export class AppRoutes {
 
         router.use("/products", ProductRoutes.router);
         router.use("/sales", SaleRoutes.router);
-        router.use("/auth", UserRoutes.router);
+        router.use("/users", UserRoutes.router);
         return router;
     }
 }
