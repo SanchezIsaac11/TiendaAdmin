@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { ProductController } from "./products.controller.ts";
+import { authMiddleware } from "../../session/auth.middleware.ts";
+import { validateCreateProduct, validateUpdateProduct, validateCategoryId, validateProductId } from "./products.validators.ts"
 
 export class ProductRoutes {
 
@@ -8,13 +10,13 @@ export class ProductRoutes {
         const router = Router();
         const productController = new ProductController();
 
-        router.get("/", productController.getProducts);
-        router.get("/categories", productController.getCategories);
-        router.get("/:id", productController.getProductById);
-        router.get("/category/:categoryId",productController.getProductsByCategory);
-        router.post("/", productController.createProduct);
-        router.put("/:id", productController.updateProductById);
-        router.delete("/:id", productController.deleteProductById);
+        router.get("/", authMiddleware(), productController.getProducts);
+        router.get("/categories", authMiddleware(), validateCategoryId, productController.getCategories);
+        router.get("/:id", authMiddleware(), validateProductId, productController.getProductById);
+        router.get("/category/:categoryId", authMiddleware(),productController.getProductsByCategory);
+        router.post("/", authMiddleware(), validateCreateProduct, productController.createProduct);
+        router.put("/:id", authMiddleware(), validateUpdateProduct, productController.updateProductById);
+        router.delete("/:id", authMiddleware(), validateProductId, productController.deleteProductById);
 
         return router;
     }
