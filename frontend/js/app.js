@@ -1,4 +1,3 @@
-
 const sections = {
   inventory: {
     title: 'Inventario',

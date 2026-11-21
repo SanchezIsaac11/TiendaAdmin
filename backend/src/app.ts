@@ -4,10 +4,11 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const port = Number(process.env.PORT);
+const origin = String(process.env.ORIGIN);
 
 function main() {
   try {
-    const server = new Server({ port, routes: AppRoutes.router });
+    const server = new Server({ port, routes: AppRoutes.router, origin });
     server.start();
   } catch (error) {
     console.log(error);

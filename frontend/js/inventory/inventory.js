@@ -1,4 +1,4 @@
-const API_BASE = '/api/products';
+const API_BASE = `${API_URL}/products`;
 
 let editingProductId = null;
 
