@@ -10,7 +10,7 @@ export class SaleRoutes {
 
         router.get("/", authMiddleware("admin"), saleController.getSales);
         router.get("/:id", authMiddleware("admin"), validateSaleId, saleController.getSaleById);
-        router.post("/", authMiddleware("admin"), validateCreateSale, saleController.createSale);
+        router.post("/", authMiddleware(), validateCreateSale, saleController.createSale);
         router.put("/:id", authMiddleware("admin"), validateSaleId, validateUpdateSale, saleController.updateSaleById);
         router.delete("/:id", authMiddleware("admin"), validateSaleId, saleController.deleteSaleById);
 
