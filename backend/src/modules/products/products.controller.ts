@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import supabase from "../../config/supabase.connection.ts";
 
 export class ProductController {
-    public async getProducts(req: Request, res: Response) {
+    public async getProducts(_req: Request, res: Response) {
         try {
             const { data: products, error } = await supabase.from("products").select("*");
             if (error) throw error;
@@ -86,7 +86,7 @@ export class ProductController {
         }
     }
 
-    public async getCategories(req: Request, res: Response) {
+    public async getCategories(_req: Request, res: Response) {
         try {
             const { data, error } = await supabase.from("categories").select("*");
 
