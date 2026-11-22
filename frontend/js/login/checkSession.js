@@ -1,24 +1,18 @@
 async function checkSession() {
     try {
-        const res = await fetch(`${API_BASE}/auth/me`, {
-            credentials: 'include'
-        });
+        const res = await fetch(`${API_URL}/users/me`, { credentials: 'include' });
 
         if (!res.ok) {
-            user = null;
-            return;
+            window.appState.user = null;
+            return false;
         }
 
         const data = await res.json();
-
-        user = {
-            id: data.id,
-            name: data.name,
-            role: data.role
-        };
-
+        window.appState.user = data;
+        return true;
     } catch (error) {
         console.error("Error checking session:", error);
-        user = null;
+        window.appState.user = null;
+        return false;
     }
 }

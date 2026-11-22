@@ -5,14 +5,13 @@ const validateRequest: RequestHandler = (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-        res.status(400).json({ message: "Los datos enviados no son válidos", errors: errors.array() });
+        res.status(400).json({ message: "Invalid data", errors: errors.array() });
         return;
     }
 
     next();
 };
 
-// Campos permitidos para crear y actualizar usuarios
 const allowedFields = ["name", "password", "role"];
 const allowedRoles = ["admin", "cashier"];
 
@@ -21,9 +20,9 @@ const nameValidation = (field: string, location: "body" | "param" = "body", opti
 
     if(optional) validator.optional();
 
-    return validator.isString().withMessage("La contraseña debe ser texto")
-        .notEmpty().withMessage("La contraseña es obligatoria")
-        .isLength({ min: 4, max: 255 }).withMessage("La contraseña debe tener al menos 4 caracteres");
+    return validator.isString().withMessage("Password must be a string")
+        .notEmpty().withMessage("Password is required")
+        .isLength({ min: 4, max: 255 }).withMessage("Password must be between 4 and 255 characters long");
 };
 
 const passValidation = (field: string, location: "body" | "param" = "body", optional: boolean = false) => {
@@ -31,9 +30,9 @@ const passValidation = (field: string, location: "body" | "param" = "body", opti
 
     if(optional) validator.optional();
 
-    return validator.isString().withMessage("El nombre debe ser texto").trim()
-        .notEmpty().withMessage("El nombre es obligatorio")
-        .isLength({ max: 150 }).withMessage("El nombre no puede superar los 150 caracteres");
+    return validator.isString().withMessage("Text must be a string").trim()
+        .notEmpty().withMessage("Text is required")
+        .isLength({ max: 150 }).withMessage("Text must be less than 150 characters long");
 };
 
 const roleValidation = (field: string, location: "body" | "param" = "body", optional: boolean = false) => {
@@ -41,75 +40,73 @@ const roleValidation = (field: string, location: "body" | "param" = "body", opti
 
     if(optional) validator.optional();
 
-    return validator.isString().withMessage("El rol debe ser texto").trim()
-        .notEmpty().withMessage("El rol es obligatorio")
-        .isIn(allowedRoles).withMessage("El rol debe ser 'admin' o 'cashier'");
+    return validator.isString().withMessage("Rol must be a string").trim()
+        .notEmpty().withMessage("Rol is required")
+        .isIn(allowedRoles).withMessage("Rol must be 'admin' or 'cashier'");
 };
 
-// Validar el ID del usuario
-export const validateUserId = [
-    param("id").isInt({ min: 1 }).withMessage("El ID debe ser un número entero positivo"),
-    validateRequest
-];
+export class UserValidator {
 
-export const validateUserName = [
-    nameValidation("name", "param"),
-    validateRequest
-];
+    public static validateUserId = [
+        param("id").isInt({ min: 1 }).withMessage("ID must be a positive integer"),
+        validateRequest
+    ];
 
-// Validar la creación de un usuario
-export const validateCreateUser = [
-    body().custom((value) => {
-        if (!value || typeof value !== "object" || Array.isArray(value)) {
-            throw new Error("Se deben enviar datos válidos");
-        }
+    public static validateUserName = [
+        nameValidation("name", "param"),
+        validateRequest
+    ];
 
-        const fields = Object.keys(value);
-        const invalidFields = fields.filter((field) => !allowedFields.includes(field));
+    public static validateCreateUser = [
+        body().custom((value) => {
+            if (!value || typeof value !== "object" || Array.isArray(value)) {
+                throw new Error("Invalid data");
+            }
 
-        if (invalidFields.length > 0) {
-            throw new Error(`Campos no permitidos: ${invalidFields.join(", ")}`);
-        }
+            const fields = Object.keys(value);
+            const invalidFields = fields.filter(
+                (field) => !allowedFields.includes(field)
+            );
 
-        return true;
-    }),
+            if (invalidFields.length > 0) {
+                throw new Error(`Invalid fields: ${invalidFields.join(", ")}`);
+            }
 
-    nameValidation("name"),
+            return true;
+        }),
 
-    passValidation("password"),
+        nameValidation("name"),
+        passValidation("password"),
+        roleValidation("role"),
+        validateRequest
+    ];
 
-    roleValidation("role"),
+    public static validateUpdateUser = [
+        body().custom((value) => {
+            if (!value || typeof value !== "object" || Array.isArray(value)) {
+                throw new Error("Invalid data");
+            }
 
-    validateRequest
-];
+            const fields = Object.keys(value);
 
-// Validar la actualización de un usuario
-export const validateUpdateUser = [
-    body().custom((value) => {
-        if (!value || typeof value !== "object" || Array.isArray(value)) {
-            throw new Error("Se deben enviar datos para actualizar");
-        }
+            if (fields.length === 0) {
+                throw new Error("Must send at least one field to update");
+            }
 
-        const fields = Object.keys(value);
+            const invalidFields = fields.filter(
+                (field) => !allowedFields.includes(field)
+            );
 
-        if (fields.length === 0) {
-            throw new Error("Debes enviar al menos un campo para actualizar");
-        }
+            if (invalidFields.length > 0) {
+                throw new Error(`Invalid fields: ${invalidFields.join(", ")}`);
+            }
 
-        const invalidFields = fields.filter((field) => !allowedFields.includes(field));
+            return true;
+        }),
 
-        if (invalidFields.length > 0) {
-            throw new Error(`Campos no permitidos: ${invalidFields.join(", ")}`);
-        }
-
-        return true;
-    }),
-
-    nameValidation("name", "body", true),
-
-    passValidation("password", "body", true),
-
-    roleValidation("role", "body", true),
-
-    validateRequest
-];
+        nameValidation("name", "body", true),
+        passValidation("password", "body", true),
+        roleValidation("role", "body", true),
+        validateRequest
+    ];
+}

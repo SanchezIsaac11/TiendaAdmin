@@ -5,7 +5,6 @@ const sections = {
     js: 'js/inventory/inventory.js',
     init: 'initInventory'
   }
-
 };
 
 let currentSection = null;
@@ -17,6 +16,15 @@ const sidebar = document.getElementById('sidebar');
 const sidebarOverlay = document.getElementById('sidebarOverlay');
 const btnMenu = document.getElementById('btnMenu');
 const navItems = document.querySelectorAll('.nav-item');
+const btnLogout = document.getElementById('btnLogout');
+
+function onUserLoggedIn(user) {
+  const userName = document.getElementById('sidebarUserName');
+  const userRole = document.getElementById('sidebarUserRole');
+
+  if (userName) userName.textContent = user?.name || 'Usuario';
+  if (userRole) userRole.textContent = user?.role === 'admin' ? 'Administrador' : 'Cajero';
+}
 
 async function loadSection(sectionKey) {
   const section = sections[sectionKey];
@@ -40,7 +48,7 @@ async function loadSection(sectionKey) {
 
   try {
     const res = await fetch(section.html);
-    if (!res.ok) throw new Error(`No se pudo cargar ${section.html}`);
+    if (!res.ok) throw new Error(`Cannot load ${section.html}`);
     const html = await res.text();
     sectionContent.innerHTML = html;
 
@@ -48,9 +56,9 @@ async function loadSection(sectionKey) {
 
     currentSection = sectionKey;
   } catch (err) {
-    console.error(`Error cargando sección "${sectionKey}":`, err);
+    console.error(`Error loading section "${sectionKey}":`, err);
     sectionContent.innerHTML = `
-      <div class="loading-section" style="color: #dc2626;">
+      <div class="loading-section" style="color: var(--color-danger, #dc2626);">
         Error al cargar la sección. Intenta de nuevo.
       </div>
     `;
@@ -101,8 +109,14 @@ function toggleSidebar() {
   }
 }
 
-btnMenu.addEventListener('click', toggleSidebar);
-sidebarOverlay.addEventListener('click', closeSidebar);
+btnMenu?.addEventListener('click', toggleSidebar);
+sidebarOverlay?.addEventListener('click', closeSidebar);
+
+btnLogout?.addEventListener('click', () => {
+  if (typeof logout === 'function') {
+    logout();
+  }
+});
 
 navItems.forEach(item => {
   item.addEventListener('click', () => {
@@ -113,6 +127,15 @@ navItems.forEach(item => {
   });
 });
 
-window.addEventListener('DOMContentLoaded', () => {
-  loadSection('inventory');
+window.addEventListener('DOMContentLoaded', async () => {
+  const hasSession = await checkSession();
+
+  if (hasSession && window.appState.user) {
+    onUserLoggedIn(window.appState.user);
+    const appLayout = document.getElementById('appLayout');
+    if (appLayout) appLayout.style.display = 'flex';
+    loadSection('inventory');
+  } else {
+    showLogin();
+  }
 });

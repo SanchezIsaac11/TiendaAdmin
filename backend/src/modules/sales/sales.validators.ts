@@ -12,100 +12,99 @@ const validateRequest: RequestHandler = (req, res, next) => {
     next();
 };
 
-// Campos permitidos para crear y actualizar ventas
 const allowedFields = ["folio", "total", "date", "cashier_id"];
 
-// Validar el ID de la venta
-export const validateSaleId = [
-    param("id").isInt({ min: 1 }).withMessage("El ID debe ser un número entero positivo"),
-    validateRequest
-];
+const folioValidation = (field: string, location: "body" | "param" = "body", optional: boolean = false) => {
+    const validator = location === "body" ? body(field) : param(field);
 
-// Validar la creación de una venta
-export const validateCreateSale = [
-    body().custom((value) => {
-        if (!value || typeof value !== "object" || Array.isArray(value)) {
-            throw new Error("Se deben enviar datos válidos");
-        }
+    if(optional) validator.optional();
 
-        const fields = Object.keys(value);
-        const invalidFields = fields.filter((field) => !allowedFields.includes(field));
+    return validator.isString().withMessage("Folio must be a string").trim()
+        .notEmpty().withMessage("Folio is required")
+        .isLength({ max: 100 }).withMessage("Folio must be 100 characters long")
+};
 
-        if (invalidFields.length > 0) {
-            throw new Error(`Campos no permitidos: ${invalidFields.join(", ")}`);
-        }
+const totalValidation = (field: string, location: "body" | "param" = "body", optional: boolean = false) => {
+    const validator = location === "body" ? body(field) : param(field);
 
-        return true;
-    }),
+    if(optional) validator.optional();
 
-    body("folio")
-        .isString().withMessage("El folio debe ser texto")
-        .trim()
-        .notEmpty().withMessage("El folio es obligatorio")
-        .isLength({ max: 100 }).withMessage("El folio no puede superar los 100 caracteres"),
+    return validator.isDecimal({ decimal_digits: "0,2" }).withMessage("The total must be a valid number with a maximum of 2 decimal place ").bail()
+        .isFloat({ min: 0, max: 99999999.99 }).withMessage("Total out of range").toFloat();
+};
 
-    body("total")
-        .isDecimal({ decimal_digits: "0,2" }).withMessage("El total debe ser válido y tener máximo 2 decimales")
-        .bail()
-        .isFloat({ min: 0, max: 99999999.99 }).withMessage("El total está fuera del rango permitido")
-        .toFloat(),
+const dateValidation = (field: string, location: "body" | "param" = "body", optional: boolean = false) => {
+    const validator = location === "body" ? body(field) : param(field);
 
-    body("date")
-        .optional()
-        .isISO8601().withMessage("La fecha debe tener un formato válido (ISO 8601)"),
+    if(optional) validator.optional();
 
-    body("cashier_id")
-        .isInt({ min: 1 }).withMessage("El ID del cajero debe ser un número entero positivo")
-        .toInt(),
+    return validator.optional().isISO8601().withMessage("Date must be a valid format (ISO 8601)");
+};
 
-    validateRequest
-];
+const cashierIDValidation = (field: string, location: "body" | "param" = "body", optional: boolean = false) => {
+    const validator = location === "body" ? body(field) : param(field);
 
-// Validar la actualización de una venta
-export const validateUpdateSale = [
-    body().custom((value) => {
-        if (!value || typeof value !== "object" || Array.isArray(value)) {
-            throw new Error("Se deben enviar datos para actualizar");
-        }
+    if(optional) validator.optional();
 
-        const fields = Object.keys(value);
+    return validator.isInt({ min: 1 }).withMessage("Casher ID must be a valid positive integer").toInt();
+};
 
-        if (fields.length === 0) {
-            throw new Error("Debes enviar al menos un campo para actualizar");
-        }
+export class SaleValidator{
+    public static validateSaleId = [
+            param("id").isInt({ min: 1 }).withMessage("ID must be a positive integer"),
+            validateRequest
+        ];
 
-        const invalidFields = fields.filter((field) => !allowedFields.includes(field));
+    public static validateCreateSale = [
+        body().custom((value) => {
+            if (!value || typeof value !== "object" || Array.isArray(value)) {
+                throw new Error("Invalida data");
+            }
 
-        if (invalidFields.length > 0) {
-            throw new Error(`Campos no permitidos: ${invalidFields.join(", ")}`);
-        }
+            const fields = Object.keys(value);
+            const invalidFields = fields.filter((field) => !allowedFields.includes(field));
 
-        return true;
-    }),
+            if (invalidFields.length > 0) {
+                throw new Error(`Invalid Fields: ${invalidFields.join(", ")}`);
+            }
 
-    body("folio")
-        .optional()
-        .isString().withMessage("El folio debe ser texto")
-        .trim()
-        .notEmpty().withMessage("El folio no puede estar vacío")
-        .isLength({ max: 100 }).withMessage("El folio no puede superar los 100 caracteres"),
+            return true;
+        }),
 
-    body("total")
-        .optional()
-        .isDecimal({ decimal_digits: "0,2" }).withMessage("El total debe ser válido y tener máximo 2 decimales")
-        .bail()
-        .isFloat({ min: 0, max: 99999999.99 }).withMessage("El total está fuera del rango permitido")
-        .toFloat(),
+        folioValidation("folio"),
+        totalValidation("total"),
+        dateValidation("date"),
+        cashierIDValidation("cashier_id"),
+        validateRequest
+    ];
 
-    body("date")
-        .optional()
-        .isISO8601().withMessage("La fecha debe tener un formato válido (ISO 8601)"),
+    public static validateUpdateSale = [
+        body().custom((value) => {
+            if (!value || typeof value !== "object" || Array.isArray(value)) {
+                throw new Error("Se deben enviar datos para actualizar");
+            }
 
-    body("cashier_id")
-        .optional()
-        .isInt({ min: 1 }).withMessage("El ID del cajero debe ser un número entero positivo")
-        .toInt(),
+            const fields = Object.keys(value);
 
-    validateRequest
-];
+            if (fields.length === 0) {
+                throw new Error("Debes enviar al menos un campo para actualizar");
+            }
+
+            const invalidFields = fields.filter((field) => !allowedFields.includes(field));
+
+            if (invalidFields.length > 0) {
+                throw new Error(`Campos no permitidos: ${invalidFields.join(", ")}`);
+            }
+
+            return true;
+        }),
+
+        folioValidation("folio", "body", true),
+        totalValidation("total", "body", true),
+        dateValidation("date", "body", true),
+        cashierIDValidation("cashier_id", "body", true),
+        validateRequest
+    ];
+
+}
 

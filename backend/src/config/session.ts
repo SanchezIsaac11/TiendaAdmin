@@ -1,5 +1,4 @@
 import session from "express-session";
-
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -11,11 +10,12 @@ const {
 const sessionConfig = session({
     secret: SESSION_SECRET!,
     resave: false,
-
+    saveUninitialized: false,
     cookie: {
         httpOnly: true,
+        sameSite: 'lax',
         secure: false,
-        maxAge: 3600 // 1 hour 
+        maxAge: 1000 * 60 * 60 * 24
     }
 });
 

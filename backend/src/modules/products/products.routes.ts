@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { ProductController } from "./products.controller.ts";
 import { authMiddleware } from "../../session/auth.middleware.ts";
-import { validateCreateProduct, validateUpdateProduct, validateCategoryId, validateProductId } from "./products.validators.ts"
+import { ProductValidator } from "./products.validators.ts"
 
 export class ProductRoutes {
 
@@ -11,12 +11,12 @@ export class ProductRoutes {
         const productController = new ProductController();
 
         router.get("/", authMiddleware(), productController.getProducts);
-        router.get("/categories", authMiddleware(), validateCategoryId, productController.getCategories);
-        router.get("/:id", authMiddleware(), validateProductId, productController.getProductById);
-        router.get("/category/:categoryId", authMiddleware(),productController.getProductsByCategory);
-        router.post("/", authMiddleware(), validateCreateProduct, productController.createProduct);
-        router.put("/:id", authMiddleware(), validateUpdateProduct, productController.updateProductById);
-        router.delete("/:id", authMiddleware(), validateProductId, productController.deleteProductById);
+        router.get("/categories", authMiddleware(), productController.getCategories);
+        router.get("/:id", authMiddleware(), ProductValidator.validateProductId, productController.getProductById);
+        router.get("/category/:categoryId", authMiddleware(), ProductValidator.validateCategoryId, productController.getProductsByCategory);
+        router.post("/", authMiddleware(), ProductValidator.validateCreateProduct, productController.createProduct);
+        router.put("/:id", authMiddleware(), ProductValidator.validateUpdateProduct, productController.updateProductById);
+        router.delete("/:id", authMiddleware(), ProductValidator.validateProductId, productController.deleteProductById);
 
         return router;
     }

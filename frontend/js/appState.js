@@ -1,0 +1,3 @@
+window.appState = {
+    user: null
+};

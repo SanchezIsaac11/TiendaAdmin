@@ -1,17 +1,16 @@
 const API_BASE = `${API_URL}/products`;
 
 let editingProductId = null;
+let categoriesMap = new Map();
 
-let form, btnSubmit, btnRefresh, tableBody, countElement, feedback;
+let form, btnSubmit, tableBody, feedback;
 let priceCostAlert, priceInput, costInput, stockInput, categorySelect;
 let btnCancelEdit, formTitle;
 
 function bindElements() {
   form = document.getElementById('productForm');
   btnSubmit = document.getElementById('btnSubmit');
-  btnRefresh = document.getElementById('btnRefresh');
   tableBody = document.getElementById('productsTableBody');
-  countElement = document.getElementById('productsCount');
   feedback = document.getElementById('feedbackMessage');
   priceCostAlert = document.getElementById('priceCostAlert');
   priceInput = document.getElementById('price');
@@ -34,13 +33,15 @@ function showMessage(text, type = 'info') {
 
 async function loadCategories() {
   try {
-    const res = await fetch(`${API_BASE}/categories`);
+    const res = await fetch(`${API_BASE}/categories`, { method: 'GET', credentials: 'include' });
     if (!res.ok) throw new Error('Error al obtener categorías');
 
     const categories = await res.json();
+    categoriesMap.clear();
 
     categorySelect.innerHTML = '<option value="">Selecciona una categoría</option>';
     categories.forEach(cat => {
+      categoriesMap.set(cat.id, cat.name);
       const option = document.createElement('option');
       option.value = cat.id;
       option.textContent = cat.name;
@@ -60,7 +61,11 @@ async function loadProducts() {
   `;
 
   try {
-    const res = await fetch(API_BASE);
+    if (categoriesMap.size === 0) {
+      await loadCategories();
+    }
+
+    const res = await fetch(API_BASE, { method: 'GET', credentials: 'include' });
     if (!res.ok) throw new Error('Error al obtener productos');
 
     const products = await res.json();
@@ -73,7 +78,6 @@ async function loadProducts() {
         <td colspan="6" class="empty-cell">Error al cargar productos.</td>
       </tr>
     `;
-    countElement.textContent = 'Total: 0';
   }
 }
 
@@ -154,6 +158,7 @@ async function saveProduct(event) {
     if (editingProductId) {
       res = await fetch(`${API_BASE}/${editingProductId}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(productData)
       });
@@ -198,7 +203,7 @@ async function deleteProduct(id, productName) {
 
   try {
     const res = await fetch(`${API_BASE}/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE', credentials: 'include'
     });
 
     if (!res.ok) {
@@ -216,7 +221,7 @@ async function deleteProduct(id, productName) {
 
 async function editProduct(id) {
   try {
-    const res = await fetch(`${API_BASE}/${id}`);
+    const res = await fetch(`${API_BASE}/${id}`, { method: 'GET', credentials: 'include' });
     if (!res.ok) throw new Error('No se pudo obtener el producto');
 
     const product = await res.json();
@@ -254,29 +259,32 @@ function renderTable(products) {
         <td colspan="6" class="empty-cell">No hay productos.</td>
       </tr>
     `;
-    countElement.textContent = 'Total: 0';
     return;
   }
 
-  tableBody.innerHTML = products.map(prod => `
-    <tr>
-      <td><code>${escapeHtml(prod.barcode || '-')}</code></td>
-      <td>${escapeHtml(prod.name || '-')}</td>
-      <td>${escapeHtml(prod.category_name || prod.id_category?.toString() || 'General')}</td>
-      <td class="price-tag">$${Number(prod.price || 0).toFixed(2)}</td>
-      <td><span class="stock-tag">${Number(prod.stock || 0)}</span></td>
-      <td class="actions-cell">
-        <button class="btn btn-sm btn-edit" onclick="editProduct(${prod.id})" title="Editar">
-          ✏️
-        </button>
-        <button class="btn btn-sm btn-delete" onclick="deleteProduct(${prod.id}, '${escapeHtml(prod.name || '')}')" title="Eliminar">
-          🗑️
-        </button>
-      </td>
-    </tr>
-  `).join('');
+  tableBody.innerHTML = products.map(prod => {
+    const categoryName = prod.category_name 
+      || categoriesMap.get(prod.id_category) 
+      || (prod.id_category ? `Categoría ${prod.id_category}` : 'General');
 
-  countElement.textContent = `Total: ${products.length}`;
+    return `
+      <tr>
+        <td><code>${escapeHtml(prod.barcode || '-')}</code></td>
+        <td>${escapeHtml(prod.name || '-')}</td>
+        <td>${escapeHtml(categoryName)}</td>
+        <td class="price-tag">$${Number(prod.price || 0).toFixed(2)}</td>
+        <td><span class="stock-tag">${Number(prod.stock || 0)}</span></td>
+        <td class="actions-cell">
+          <button class="btn btn-sm btn-edit" onclick="editProduct(${prod.id})" title="Editar">
+            ✏️
+          </button>
+          <button class="btn btn-sm btn-delete" onclick="deleteProduct(${prod.id}, '${escapeHtml(prod.name || '')}')" title="Eliminar">
+            🗑️
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
 
 function escapeHtml(text) {
@@ -314,7 +322,6 @@ function validatePriceCost() {
 
 function bindEventListeners() {
   form.addEventListener('submit', saveProduct);
-  btnRefresh.addEventListener('click', loadProducts);
 
   if (btnCancelEdit) {
     btnCancelEdit.addEventListener('click', () => {

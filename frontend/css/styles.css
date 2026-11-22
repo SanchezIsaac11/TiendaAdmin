@@ -21,7 +21,6 @@
   --line-height-normal: 1.4;
   --line-height-base: 1.5;
 
-  /* Colores del Sistema */
   --color-bg-body: #f8fafc;
   --color-bg-card: #ffffff;
   --color-bg-header: #ffffff;
@@ -115,10 +114,6 @@ body {
   border-bottom: 1px solid var(--color-sidebar-border);
 }
 
-.sidebar-logo {
-  font-size: var(--font-size-3xl);
-}
-
 .sidebar-title {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
@@ -167,6 +162,19 @@ body {
   width: 24px;
   text-align: center;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: #ffffff;
+}
+
+.nav-icon svg {
+    width: 22px;
+    height: 22px;
+    display: block;
 }
 
 .nav-label {
@@ -185,6 +193,62 @@ body {
 
 .sidebar-overlay.visible {
   display: block;
+}
+
+.sidebar-footer {
+  padding: 12px 14px;
+  border-top: 1px solid var(--color-sidebar-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.user-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-sidebar-title);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  font-size: var(--font-size-xs);
+  color: var(--color-sidebar-text);
+  text-transform: capitalize;
+}
+
+.btn-logout {
+  background: transparent;
+  border: 1px solid var(--color-sidebar-border);
+  border-radius: 6px;
+  color: var(--color-sidebar-text);
+  padding: 5px 8px;
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.btn-logout:hover {
+  background-color: var(--color-danger);
+  color: var(--color-text-white);
+  border-color: var(--color-danger);
 }
 
 .main-content {
