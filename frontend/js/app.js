@@ -4,6 +4,12 @@ const sections = {
     html: 'html/inventory.html',
     js: 'js/inventory/inventory.js',
     init: 'initInventory'
+  },
+  sales: {
+    title: 'Historial de Ventas',
+    html: 'html/sales.html',
+    js: 'js/sales/sales.js',
+    init: 'initSales'
   }
 };
 
@@ -21,9 +27,11 @@ const btnLogout = document.getElementById('btnLogout');
 function onUserLoggedIn(user) {
   const userName = document.getElementById('sidebarUserName');
   const userRole = document.getElementById('sidebarUserRole');
+  const salesNav = document.querySelector('.nav-item[data-section="sales"]');
 
   if (userName) userName.textContent = user?.name || 'Usuario';
   if (userRole) userRole.textContent = user?.role === 'admin' ? 'Administrador' : 'Cajero';
+  if (salesNav) salesNav.style.display = user?.role === 'admin' ? '' : 'none';
 }
 
 async function loadSection(sectionKey) {

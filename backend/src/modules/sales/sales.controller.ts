@@ -4,7 +4,7 @@ import supabase from "../../config/supabase.connection.ts";
 export class SaleController {
     public async getSales(_req: Request, res: Response) {
         try {
-            const { data: sales, error } = await supabase.from("sales").select("*");
+            const { data: sales, error } = await supabase.from("sale").select("*");
 
             if (error) throw error;
 
@@ -18,7 +18,7 @@ export class SaleController {
     public async getSaleById(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const { data: sale, error } = await supabase.from("sales").select("*").eq("id", id).maybeSingle();
+            const { data: sale, error } = await supabase.from("sale").select("*").eq("id", id).maybeSingle();
 
             if (error) throw error;
 
@@ -33,7 +33,7 @@ export class SaleController {
 
     public async createSale(req: Request, res: Response) {
         try {
-            const { data: sale, error } = await supabase.from("sales").insert(req.body).select().single();
+            const { data: sale, error } = await supabase.from("sale").insert(req.body).select().single();
 
             if (error) throw error;
 
@@ -57,7 +57,7 @@ export class SaleController {
     public async updateSaleById(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const { data: sale, error } = await supabase.from("sales").update(req.body).eq("id", id).select().maybeSingle();
+            const { data: sale, error } = await supabase.from("sale").update(req.body).eq("id", id).select().maybeSingle();
 
             if (error) throw error;
 
@@ -83,7 +83,7 @@ export class SaleController {
     public async deleteSaleById(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const { data: sale, error } = await supabase.from("sales").delete().eq("id", id).select().maybeSingle();
+            const { data: sale, error } = await supabase.from("sale").delete().eq("id", id).select().maybeSingle();
 
             if (error) throw error;
 

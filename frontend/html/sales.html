@@ -1,0 +1,33 @@
+<section class="sales-section">
+  <div class="sales-kpis">
+    <div class="kpi-card"><span>Ventas Totales</span><strong id="kpiSalesTotal">$0.00</strong></div>
+    <div class="kpi-card"><span>Tickets Emitidos</span><strong id="kpiSalesCount">0</strong></div>
+    <div class="kpi-card"><span>Ticket Promedio</span><strong id="kpiSalesAvg">$0.00</strong></div>
+  </div>
+
+  <div class="card">
+    <div class="sales-header">
+      <h3>Historial de Ventas</h3>
+      <button type="button" id="btnRefreshSales" class="btn btn-secondary btn-sm">Actualizar</button>
+    </div>
+
+    <div class="sales-filters">
+      <input type="text" id="salesSearchInput" class="sales-input" placeholder="Buscar por folio o cajero...">
+      <input type="date" id="salesDateInput" class="sales-input">
+      <button type="button" id="btnClearSalesDate" class="btn btn-secondary btn-sm" style="display: none;">Limpiar</button>
+    </div>
+
+    <div id="salesFeedback" class="feedback-message" style="display: none;"></div>
+
+    <div class="table-wrapper">
+      <table class="products-table">
+        <thead>
+          <tr><th>ID</th><th>Folio</th><th>Fecha y Hora</th><th>Cajero</th><th>Total</th><th>Acciones</th></tr>
+        </thead>
+        <tbody id="salesTableBody">
+          <tr><td colspan="6" class="loading-cell">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
