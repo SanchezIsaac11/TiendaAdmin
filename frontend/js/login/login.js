@@ -10,12 +10,12 @@ async function showLogin() {
 
     try {
         const res = await fetch('html/login.html');
-        if (!res.ok) throw new Error('No se pudo cargar login.html');
+        if (!res.ok) throw new Error('Cannot load login.html');
         const html = await res.text();
         loginRoot.innerHTML = html;
         bindLoginForm();
     } catch (error) {
-        console.error('Error cargando pantalla de login:', error);
+        console.error('Cannot load login.html:', error);
         loginRoot.innerHTML = `
             <div style="text-align: center; padding: 40px; color: var(--color-danger, red);">
                 Error al cargar la pantalla de login.

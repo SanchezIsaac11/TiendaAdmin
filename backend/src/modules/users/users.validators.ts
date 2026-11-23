@@ -15,36 +15,30 @@ const validateRequest: RequestHandler = (req, res, next) => {
 const allowedFields = ["name", "password", "role"];
 const allowedRoles = ["admin", "cashier"];
 
-const nameValidation = (field: string, location: "body" | "param" = "body", optional: boolean = false) => {
+const validation = (field: string, location: "body" | "param" = "body", optional: boolean = false) => {
     const validator = location === "body" ? body(field) : param(field);
 
     if(optional) validator.optional();
 
-    return validator.isString().withMessage("Password must be a string")
-        .notEmpty().withMessage("Password is required")
-        .isLength({ min: 4, max: 255 }).withMessage("Password must be between 4 and 255 characters long");
+    switch (field) {
+        case "name":
+                return validator.isString().withMessage("Name must be a string")
+                .notEmpty().withMessage("Name is required")
+                .isLength({ min: 4, max: 255 }).withMessage("Name must be between 4 and 255 characters long");
+
+        case "password":
+                return validator.isString().withMessage("Password must be a string").trim()
+                .notEmpty().withMessage("Password is required")
+                .isLength({ max: 150 }).withMessage("Password must be less than 150 characters long");
+
+        case "role":
+                return validator.isString().withMessage("Role must be a string").trim()
+                .notEmpty().withMessage("Role is required")
+                .isIn(allowedRoles).withMessage("Role must be 'admin' or 'cashier'");
+
+        default: throw new Error(`No validation defined for field: ${field}`);
+    }
 };
-
-const passValidation = (field: string, location: "body" | "param" = "body", optional: boolean = false) => {
-    const validator = location === "body" ? body(field) : param(field);
-
-    if(optional) validator.optional();
-
-    return validator.isString().withMessage("Text must be a string").trim()
-        .notEmpty().withMessage("Text is required")
-        .isLength({ max: 150 }).withMessage("Text must be less than 150 characters long");
-};
-
-const roleValidation = (field: string, location: "body" | "param" = "body", optional: boolean = false) => {
-    const validator = location === "body" ? body(field) : param(field);
-
-    if(optional) validator.optional();
-
-    return validator.isString().withMessage("Rol must be a string").trim()
-        .notEmpty().withMessage("Rol is required")
-        .isIn(allowedRoles).withMessage("Rol must be 'admin' or 'cashier'");
-};
-
 export class UserValidator {
 
     public static validateUserId = [
@@ -53,7 +47,7 @@ export class UserValidator {
     ];
 
     public static validateUserName = [
-        nameValidation("name", "param"),
+        validation("name", "param"),
         validateRequest
     ];
 
@@ -75,9 +69,9 @@ export class UserValidator {
             return true;
         }),
 
-        nameValidation("name"),
-        passValidation("password"),
-        roleValidation("role"),
+        validation("name"),
+        validation("password"),
+        validation("role"),
         validateRequest
     ];
 
@@ -104,9 +98,9 @@ export class UserValidator {
             return true;
         }),
 
-        nameValidation("name", "body", true),
-        passValidation("password", "body", true),
-        roleValidation("role", "body", true),
+        validation("name", "body", true),
+        validation("password", "body", true),
+        validation("role", "body", true),
         validateRequest
     ];
 }

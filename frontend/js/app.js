@@ -4,6 +4,12 @@ const sections = {
     html: 'html/inventory.html',
     js: 'js/inventory/inventory.js',
     init: 'initInventory'
+  },
+  accounts: {
+    title: 'Administrar Cuentas',
+    html: 'html/accounts.html',
+    js: 'js/accounts/accounts.js',
+    init: 'initAccounts'
   }
 };
 
@@ -21,9 +27,14 @@ const btnLogout = document.getElementById('btnLogout');
 function onUserLoggedIn(user) {
   const userName = document.getElementById('sidebarUserName');
   const userRole = document.getElementById('sidebarUserRole');
+  const navAccounts = document.getElementById('navAccounts');
 
   if (userName) userName.textContent = user?.name || 'Usuario';
   if (userRole) userRole.textContent = user?.role === 'admin' ? 'Administrador' : 'Cajero';
+
+  if (navAccounts) {
+    navAccounts.style.display = user?.role === 'admin' ? 'flex' : 'none';
+  }
 }
 
 async function loadSection(sectionKey) {
@@ -38,13 +49,21 @@ async function loadSection(sectionKey) {
     return;
   }
 
+  if (sectionKey === 'accounts' && window.appState?.user?.role !== 'admin') {
+    sectionTitle.textContent = section.title;
+    navItems.forEach(item => {
+      item.classList.toggle('active', item.dataset.section === sectionKey);
+    });
+    console.log('Are you lost? CASHIER?');
+    closeSidebar();
+    return;
+  }
+
   sectionTitle.textContent = section.title;
 
   navItems.forEach(item => {
     item.classList.toggle('active', item.dataset.section === sectionKey);
   });
-
-  sectionContent.innerHTML = '<div class="loading-section">Cargando...</div>';
 
   try {
     const res = await fetch(section.html);

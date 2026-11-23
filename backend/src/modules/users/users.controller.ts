@@ -11,20 +11,19 @@ export class UserController {
             return res.status(200).json(users);
         } catch (error) {
             console.error("Error getting users:", error);
-            return res.status(500).json({ message: "Internal server error" });
+            return res.status(500).json({ message: "Error interno del servidor" });
         }
     }
 
     public async login(req: Request, res: Response) {
-        
-            console.log("User logged in:", req.session.user);
-        try{
+        console.log("User logged in:", req.session.user);
+        try {
             const { name, password } = req.body;
             const { data: user, error } = await supabase.from("user").select("id, name, password, role").eq("name", name).maybeSingle();
 
             if (error) throw error;
 
-            if (!user || user.password !== password) return res.status(401).json({ message: "User or password invalid" });
+            if (!user || user.password !== password) return res.status(401).json({ message: "Nombre de usuario o contraseña inválidos" });
 
             req.session.user = {
                 id: user.id,
@@ -33,27 +32,27 @@ export class UserController {
             };
 
             console.log("User logged in:", req.session.user);
-            return res.status(200).json({message: "User logged in", user: req.session.user});
-        }catch(err) {
+            return res.status(200).json({ message: "Usuario conectado correctamente", user: req.session.user });
+        } catch (err) {
             console.error("Error logging in:", err);
-            return res.status(500).json({ message: "Internal server error"});
+            return res.status(500).json({ message: "Error interno del servidor" });
         }
     }
 
     public async logout(req: Request, res: Response) {
         req.session.destroy((err) => {
             if (err) {
-                return res.status(500).json({ message: "Error logging out" });
+                return res.status(500).json({ message: "Error al cerrar sesión" });
             }
             res.clearCookie("connect.sid");
-            return res.status(200).json({ message: "User logged out successfully" });
+            return res.status(200).json({ message: "Usuario desconectado correctamente" });
         });
     }
 
     public async getCurrentUser(req: Request, res: Response) {
         if (!req.session.user) {
             return res.status(401).json({
-                message: "Unauthenticated"
+                message: "Usuario no autenticado"
             });
         }
 
@@ -67,12 +66,12 @@ export class UserController {
 
             if (error) throw error;
 
-            if (!user) return res.status(404).json({ message: "User not found" });
+            if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
 
             return res.status(200).json(user);
         } catch (error) {
             console.error("Error getting user:", error);
-            return res.status(500).json({ message: "Internal server error" });
+            return res.status(500).json({ message: "Error interno del servidor" });
         }
     }
 
@@ -82,7 +81,7 @@ export class UserController {
 
             if (error) throw error;
 
-            return res.status(201).json({ message: "User created", user });
+            return res.status(201).json({ message: "Usuario creado", user });
         } catch (error) {
             const pgError = error as { code?: string };
 
@@ -91,7 +90,7 @@ export class UserController {
             }
 
             console.error("Error creating user:", error);
-            return res.status(500).json({ message: "Internal server error" });
+            return res.status(500).json({ message: "Error interno del servidor" });
         }
     }
 
@@ -102,9 +101,9 @@ export class UserController {
 
             if (error) throw error;
 
-            if (!user) return res.status(404).json({ message: "User not found" });
+            if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
 
-            return res.status(200).json({ message: "User updated", user });
+            return res.status(200).json({ message: "Usuario actualizado correctamente", user });
         } catch (error) {
             const pgError = error as { code?: string };
 
@@ -113,7 +112,7 @@ export class UserController {
             }
 
             console.error("Error updating user:", error);
-            return res.status(500).json({ message: "Internal server error" });
+            return res.status(500).json({ message: "Error interno del servidor" });
         }
     }
 
@@ -124,12 +123,12 @@ export class UserController {
 
             if (error) throw error;
 
-            if (!user) return res.status(404).json({ message: "User not found" });
+            if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
 
-            return res.status(200).json({ message: "User deleted" });
+            return res.status(200).json({ message: "Usuario eliminado" });
         } catch (error) {
             console.error("Error deleting user:", error);
-            return res.status(500).json({ message: "Internal server error" });
+            return res.status(500).json({ message: "Error interno del servidor" });
         }
     }
 }

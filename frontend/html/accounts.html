@@ -1,0 +1,86 @@
+<section class="accounts-section">
+  <div id="accountsMainContent" class="grid-layout">
+    <div class="card account-form-card">
+      <div class="form-header-row">
+        <h3 id="accountFormTitle">Nueva Cuenta</h3>
+      </div>
+
+      <form id="accountForm">
+        <div class="form-group">
+          <label for="accountName">Nombre de Usuario</label>
+          <input
+            type="text"
+            id="accountName"
+            name="name"
+            placeholder="Ej: Elena R"
+            required
+            maxlength="255"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="accountPassword">Contraseña</label>
+          <input
+            type="password"
+            id="accountPassword"
+            name="password"
+            placeholder="••••••••"
+            maxlength="150"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="accountRole">Rol del Usuario</label>
+          <select id="accountRole" name="role" required>
+            <option value="cashier">Cajero</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+
+        <div class="form-actions-stack">
+          <button type="submit" id="btnAccountSubmit" class="btn btn-primary">
+            Crear Cuenta
+          </button>
+          <button type="button" id="btnCancelAccountEdit" class="btn btn-secondary" style="display: none;">
+            Cancelar
+          </button>
+          <button type="button" id="btnDeleteSelectedAccount" class="btn btn-danger" style="display: none;">
+            Eliminar Cuenta
+          </button>
+        </div>
+
+        <div id="accountFeedbackMessage" class="feedback-message" style="display: none;"></div>
+      </form>
+    </div>
+
+    <div class="card accounts-list-card">
+      <div class="accounts-header-row">
+        <div>
+          <h3>Cuentas Registradas</h3>
+        </div>
+      </div>
+
+      <div class="accounts-filters">
+        <div class="search-input-wrapper">
+          <input
+            type="text"
+            id="accountSearchInput"
+            placeholder="Buscar por nombre..."
+            autocomplete="off"
+          >
+        </div>
+
+        <div class="role-filter-wrapper">
+          <select id="accountRoleFilter" title="Filtrar por rol">
+            <option value="">Todos</option>
+            <option value="admin">Administradores</option>
+            <option value="cashier">Cajeros</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="accountsCardsContainer" class="user-cards-grid">
+      </div>
+    </div>
+  </div>
+</section>
