@@ -3,7 +3,6 @@ import {body, param, validationResult } from "express-validator";
 import type { RequestHandler } from "express";
 
 const validateRequest: RequestHandler = (req, res, next) => {
-
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -16,105 +15,85 @@ const validateRequest: RequestHandler = (req, res, next) => {
 
 const allowedFields = [ "name", "price", "cost", "stock", "id_category", "barcode" ];
 
-const categoryValidation = (field: string, location: "body" | "param" = "body", optional: boolean = false) => {
+const validation = (field: string, location: "body" | "param" = "body", optional: boolean = false) => {
     const validator = location === "body" ? body(field) : param(field);
 
     if(optional) validator.optional();
 
-    return validator.isInt({ min: 1 }).withMessage("Category ID must be a positive valid integer");
-};
+    switch (field) {
+        case "id_category":
+                return validator.isInt({ min: 1 }).withMessage("Category ID must be a positive valid integer");
 
-const nameValidation = (field: string, location: "body" | "param" = "body", optional: boolean = false) => {
-    const validator = location === "body" ? body(field) : param(field);
+        case "name":
+                return validator.isString().withMessage("Name must be a string").trim().notEmpty().withMessage("Name is required")
+                .isLength({ max: 150 }).withMessage("Name must be 150 characters long");
 
-    if(optional) validator.optional();
+        case "cost":
+                return validator.isDecimal({ decimal_digits: "0,2" }).withMessage("Cost must be a valid number with a maximum of 2 decimal places")
+                    .bail().isFloat({ min: 0, max: 99999999.99 }).withMessage("Cost out of range").toFloat();
 
-    return validator.isString().withMessage("El nombre debe ser texto").trim().notEmpty().withMessage("El nombre es obligatorio")
-        .isLength({ max: 150 }).withMessage("El nombre no puede superar los 150 caracteres");
-};
+        case "price":
+                return validator.isDecimal({ decimal_digits: "0,2" }).withMessage("Price must be a valid number with a maximum of 2 decimal places")
+                    .bail().isFloat({ min: 0, max: 99999999.99 }).withMessage("Price out of range").toFloat();
 
-const priceValidation = (field: string, location: "body" | "param" = "body", optional: boolean = false) => {
-    const validator = location === "body" ? body(field) : param(field);
+        case "stock":
+                return validator.isDecimal({ decimal_digits: "0,3" }).withMessage("Stock must be a valid number with a maximum of 3 decimal places")
+                    .bail().isFloat({ min: 0, max: 9999999.999 }).withMessage("Stock out of range").toFloat();
 
-    if(optional) validator.optional();
+        case "barcode":
+                return validator.optional({ values: "falsy" }).isString().withMessage("Barcode must be a string")
+                    .trim().isLength({ max: 50 }).withMessage("Barcode must be 50 characters long");
 
-    return validator.isDecimal({ decimal_digits: "0,2" }).withMessage("El precio debe ser válido y tener máximo 2 decimales")
-        .bail().isFloat({ min: 0, max: 99999999.99 }).withMessage("El precio está fuera del rango permitido").toFloat();
-};
-
-const costValidation = (field: string, location: "body" | "param" = "body", optional: boolean = false) => {
-    const validator = location === "body" ? body(field) : param(field);
-
-    if(optional) validator.optional();
-
-    return validator.isDecimal({ decimal_digits: "0,2" }).withMessage("El costo debe ser válido y tener máximo 2 decimales")
-        .bail().isFloat({ min: 0, max: 99999999.99 }).withMessage("El costo está fuera del rango permitido").toFloat()
-};
-
-const stockValidation = (field: string, location: "body" | "param" = "body", optional: boolean = false) => {
-    const validator = location === "body" ? body(field) : param(field);
-
-    if(optional) validator.optional();
-
-    return validator.optional().isDecimal({ decimal_digits: "0,3" }).withMessage("El stock debe ser válido y tener máximo 3 decimales")
-        .bail().isFloat({ min: 0, max: 9999999.999 }).withMessage("El stock está fuera del rango permitido").toFloat()
-};
-
-const barcodeValidation = (field: string, location: "body" | "param" = "body", optional: boolean = false) => {
-    const validator = location === "body" ? body(field) : param(field);
-
-    if(optional) validator.optional();
-
-    return validator.optional({ values: "falsy" }).isString().withMessage("El código de barras debe ser texto")
-        .trim().isLength({ max: 50 }).withMessage("El código de barras no puede superar los 50 caracteres")
+        default: throw new Error(`No validation defined for field: ${field}`);
+    }
 };
 
 export class ProductValidator{
-    public static validateProductId = [ param("id").isInt({ min: 1 }).withMessage("El ID debe ser un número entero positivo"), validateRequest ];
+    public static validateProductId = [ param("id").isInt({ min: 1 }).withMessage("ID must be a positive integer"), validateRequest ];
 
-    public static validateCategoryId = [ categoryValidation("id_category", "param"), validateRequest ];
+    public static validateCategoryId = [ validation("id_category", "param"), validateRequest ];
 
     public static validateCreateProduct = [
         body().custom((value) => {
-                if ( !value || typeof value !== "object" || Array.isArray(value)) throw new Error("Se deben enviar datos válidos");
+                if ( !value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid data");
 
                 const fields = Object.keys(value);
                 const invalidFields = fields.filter( field => !allowedFields.includes(field) );
 
-                if (invalidFields.length > 0) throw new Error(`Campos no permitidos: ${invalidFields.join(", ")}`);
+                if (invalidFields.length > 0) throw new Error(`Invalid fields: ${invalidFields.join(", ")}`);
                 return true; 
             }),
 
-        nameValidation("name"),
-        priceValidation("price"),
-        costValidation("cost"),
-        categoryValidation("id_category"),
-        stockValidation("stock"),
-        barcodeValidation("barcode"),
+        validation("name"),
+        validation("price"),
+        validation("cost"),
+        validation("id_category"),
+        validation("stock"),
+        validation("barcode"),
         validateRequest
     ];
 
     public static validateUpdateProduct = [
         body().custom((value) => {
-                if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Se deben enviar datos para actualizar");
+                if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid data for update");
 
                 const fields = Object.keys(value);
 
-                if (fields.length === 0) throw new Error("Debes enviar al menos un campo para actualizar");
+                if (fields.length === 0) throw new Error("You must send at least one field to update");
 
                 const invalidFields = fields.filter( field => !allowedFields.includes(field) );
 
-                if (invalidFields.length > 0) throw new Error(`Campos no permitidos: ${invalidFields.join(", ")}`);
+                if (invalidFields.length > 0) throw new Error(`Invalid fields: ${invalidFields.join(", ")}`);
 
                 return true;
             }),
 
-        nameValidation("name", "body", true),
-        priceValidation("price", "body", true),
-        costValidation("cost", "body", true),
-        categoryValidation("id_category", "body", true),
-        stockValidation("stock", "body", true),
-        barcodeValidation("barcode", "body", true),
+        validation("name", "body", true),
+        validation("price", "body", true),
+        validation("cost", "body", true),
+        validation("id_category", "body", true),
+        validation("stock", "body", true),
+        validation("barcode", "body", true),
         validateRequest
     ];
 

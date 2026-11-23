@@ -2,7 +2,7 @@ import express, { type Router } from "express";
 import sessionConfig from "./config/session.ts";
 import cors from "cors";
 
-interface serverOptions { port: number; routes: Router; origin: string }
+interface serverOptions { port: number; routes: Router; origin: string[] }
 
 export class Server {
     private readonly port: number;

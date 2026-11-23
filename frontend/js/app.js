@@ -10,6 +10,12 @@ const sections = {
     html: 'html/sales.html',
     js: 'js/sales/sales.js',
     init: 'initSales'
+  },
+  accounts: {
+    title: 'Administrar Cuentas',
+    html: 'html/accounts.html',
+    js: 'js/accounts/accounts.js',
+    init: 'initAccounts'
   }
 };
 
@@ -32,6 +38,11 @@ function onUserLoggedIn(user) {
   if (userName) userName.textContent = user?.name || 'Usuario';
   if (userRole) userRole.textContent = user?.role === 'admin' ? 'Administrador' : 'Cajero';
   if (salesNav) salesNav.style.display = user?.role === 'admin' ? '' : 'none';
+  const navAccounts = document.getElementById('navAccounts');
+
+  if (navAccounts) {
+    navAccounts.style.display = user?.role === 'admin' ? 'flex' : 'none';
+  }
 }
 
 async function loadSection(sectionKey) {
@@ -46,13 +57,21 @@ async function loadSection(sectionKey) {
     return;
   }
 
+  if (sectionKey === 'accounts' && window.appState?.user?.role !== 'admin') {
+    sectionTitle.textContent = section.title;
+    navItems.forEach(item => {
+      item.classList.toggle('active', item.dataset.section === sectionKey);
+    });
+    console.log('Are you lost? CASHIER?');
+    closeSidebar();
+    return;
+  }
+
   sectionTitle.textContent = section.title;
 
   navItems.forEach(item => {
     item.classList.toggle('active', item.dataset.section === sectionKey);
   });
-
-  sectionContent.innerHTML = '<div class="loading-section">Cargando...</div>';
 
   try {
     const res = await fetch(section.html);

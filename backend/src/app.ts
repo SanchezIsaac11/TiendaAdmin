@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const port = Number(process.env.PORT);
-const origin = String(process.env.ORIGIN);
+const origin: string[] = process.env.ALLOWED_ORIGINS?.split(",").map(origin => origin.trim()).filter(Boolean) ?? [];
 
 function main() {
   try {
